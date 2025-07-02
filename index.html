@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Market Prediction - Time Series Forecasting</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #2d4059 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background: rgba(15, 20, 25, 0.95);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(64, 224, 255, 0.3);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #40e0ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo::before {
+            content: "📈";
+            font-size: 1.2em;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: #ffffff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: #40e0ff;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><defs><pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(64,224,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-text h1 {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #40e0ff, #9d50ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 20px rgba(64, 224, 255, 0.3)); }
+            to { filter: drop-shadow(0 0 30px rgba(157, 80, 255, 0.3)); }
+        }
+
+        .hero-text p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            color: #b0c4de;
+        }
+
+        .cta-button {
+            background: linear-gradient(45deg, #40e0ff, #9d50ff);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(64, 224, 255, 0.3);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(64, 224, 255, 0.4);
+        }
+
+        .hero-visual {
+            position: relative;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(64, 224, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .chart-animation {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .chart-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #40e0ff, transparent);
+            animation: chartMove 3s ease-in-out infinite;
+        }
+
+        @keyframes chartMove {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+
+        /* Section Styles */
+        section {
+            padding: 5rem 0;
+            position: relative;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            color: #40e0ff;
+        }
+
+        /* Team Section */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .team-card {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            border: 1px solid rgba(64, 224, 255, 0.2);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .team-card:hover {
+            transform: translateY(-10px);
+            border-color: #40e0ff;
+            box-shadow: 0 20px 40px rgba(64, 224, 255, 0.2);
+        }
+
+        .team-card::before {
+            content: "👤";
+            font-size: 3rem;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        .team-card h3 {
+            color: #40e0ff;
+            margin-bottom: 0.5rem;
+            font-size: 1.3rem;
+        }
+
+        /* Objective Section */
+        .objective-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .objective-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .model-list {
+            list-style: none;
+            margin: 2rem 0;
+        }
+
+        .model-list li {
+            padding: 0.5rem 0;
+            position: relative;
+            padding-left: 2rem;
+        }
+
+        .model-list li::before {
+            content: "▶";
+            position: absolute;
+            left: 0;
+            color: #40e0ff;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .tech-card {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            border: 1px solid rgba(64, 224, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .tech-card:hover {
+            border-color: #9d50ff;
+            transform: scale(1.05);
+        }
+
+        .tech-card h4 {
+            color: #9d50ff;
+            margin-bottom: 1rem;
+        }
+
+        /* Deliverables Section */
+        .deliverables-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .deliverable-item {
+            background: linear-gradient(135deg, rgba(64, 224, 255, 0.1), rgba(157, 80, 255, 0.1));
+            border-radius: 15px;
+            padding: 2rem;
+            border: 1px solid rgba(64, 224, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .deliverable-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(64, 224, 255, 0.2);
+        }
+
+        .deliverable-item h4 {
+            color: #40e0ff;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(0, 0, 0, 0.8);
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid rgba(64, 224, 255, 0.3);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-text h1 {
+                font-size: 2.5rem;
+            }
+
+            .objective-content {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+        }
+
+        /* Floating particles animation */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #40e0ff;
+            border-radius: 50%;
+            animation: float 6s infinite linear;
+            opacity: 0.6;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+
+    <header>
+        <nav class="container">
+            <div class="logo">Stock Forecaster</div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#team">Team</a></li>
+                <li><a href="#objective">Objective</a></li>
+                <li><a href="#tech">Technology</a></li>
+                <li><a href="#deliverables">Deliverables</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="home" class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1>Stock Market Prediction</h1>
+                        <p>Leveraging advanced time series forecasting and machine learning techniques to predict stock market trends with precision and data-driven insights.</p>
+                        <button class="cta-button" onclick="document.getElementById('objective').scrollIntoView({behavior: 'smooth'})">
+                            Explore Our Project
+                        </button>
+                    </div>
+                    <div class="hero-visual">
+                        <div class="chart-animation">
+                            <div class="chart-line" style="top: 20%; animation-delay: 0s;"></div>
+                            <div class="chart-line" style="top: 40%; animation-delay: 1s;"></div>
+                            <div class="chart-line" style="top: 60%; animation-delay: 2s;"></div>
+                            <div class="chart-line" style="top: 80%; animation-delay: 0.5s;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="team">
+            <div class="container">
+                <h2 class="section-title">👥 Our Team</h2>
+                <p style="text-align: center; font-size: 1.1rem; margin-bottom: 2rem; color: #b0c4de;">
+                    A collaborative effort by seven dedicated students passionate about data science and financial forecasting
+                </p>
+                <div class="team-grid">
+                    <div class="team-card">
+                        <h3>Shivam</h3>
+                        <p>Team Member</p>
+                    </div>
+                    <div class="team-card">
+                        <h3>Somanadha Sai Addepalli</h3>
+                        <p>Team Member</p>
+                    </div>
+                    <div class="team-card">
+                        <h3>Naveen</h3>
+                        <p>Team Member</p>
+                    </div>
+                    <div class="team-card">
+                        <h3>Munthaha</h3>
+                        <p>Team Member</p>
+                    </div>
+                    <div class="team-card">
+                        <h3>Suhani</h3>
+                        <p>Team Member</p>
+                    </div>
+                    <div class="team-card">
+                        <h3>Aryan</h3>
+                        <p>Team Member</p>
+                    </div>
+                    <div class="team-card">
+                        <h3>Aditya</h3>
+                        <p>Team Member</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="objective">
+            <div class="container">
+                <h2 class="section-title">📌 Project Objective</h2>
+                <div class="objective-content">
+                    <div class="objective-text">
+                        <p>Our primary goal is to analyze historical stock market data using advanced time series models and machine learning techniques to understand stock trends and make future price predictions more interpretable and data-driven.</p>
+                        
+                        <h4 style="color: #40e0ff; margin: 2rem 0 1rem 0;">Models We're Using:</h4>
+                        <ul class="model-list">
+                            <li>ARIMA/SARIMA</li>
+                            <li>Prophet</li>
+                            <li>LSTM</li>
+                            <li>Hybrid and ensemble methods</li>
+                        </ul>
+
+                        <h4 style="color: #40e0ff; margin: 2rem 0 1rem 0;">Key Evaluation Metrics:</h4>
+                        <ul class="model-list">
+                            <li>Seasonality and trends analysis</li>
+                            <li>Volatility and patterns recognition</li>
+                            <li>Model performance using RMSE, MAPE</li>
+                        </ul>
+                    </div>
+                    <div class="hero-visual">
+                        <div class="chart-animation">
+                            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
+                                <div style="color: #40e0ff; font-weight: bold;">Time Series Analysis</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tech">
+            <div class="container">
+                <h2 class="section-title">🧠 Technologies & Tools</h2>
+                <div class="tech-grid">
+                    <div class="tech-card">
+                        <h4>Programming</h4>
+                        <p>Python</p>
+                    </div>
+                    <div class="tech-card">
+                        <h4>Data Processing</h4>
+                        <p>Pandas, NumPy</p>
+                    </div>
+                    <div class="tech-card">
+                        <h4>Visualization</h4>
+                        <p>Matplotlib, Seaborn, Plotly</p>
+                    </div>
+                    <div class="tech-card">
+                        <h4>Machine Learning</h4>
+                        <p>Scikit-learn</p>
+                    </div>
+                    <div class="tech-card">
+                        <h4>Time Series</h4>
+                        <p>Statsmodels, Facebook Prophet</p>
+                    </div>
+                    <div class="tech-card">
+                        <h4>Deep Learning</h4>
+                        <p>TensorFlow/Keras</p>
+                    </div>
+                    <div class="tech-card">
+                        <h4>Development</h4>
+                        <p>Jupyter Notebooks</p>
+                    </div>
+                    <div class="tech-card">
+                        <h4>Collaboration</h4>
+                        <p>Git & GitHub</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="deliverables">
+            <div class="container">
+                <h2 class="section-title">🚀 Project Deliverables</h2>
+                <div class="deliverables-grid">
+                    <div class="deliverable-item">
+                        <h4>📊 Dataset Analysis</h4>
+                        <p>Comprehensive analysis using publicly available stock price datasets from Yahoo Finance, including daily open/close prices, high/low values, and trading volume.</p>
+                    </div>
+                    <div class="deliverable-item">
+                        <h4>🔍 Exploratory Data Analysis</h4>
+                        <p>In-depth EDA revealing patterns, trends, and anomalies in historical stock data to inform our modeling approach.</p>
+                    </div>
+                    <div class="deliverable-item">
+                        <h4>📈 Model Comparison Dashboard</h4>
+                        <p>Interactive dashboard comparing performance of different time series models with visual metrics and statistical analysis.</p>
+                    </div>
+                    <div class="deliverable-item">
+                        <h4>🎯 Interactive Forecasting Plots</h4>
+                        <p>Dynamic visualizations showing predicted vs actual stock prices with confidence intervals and trend analysis.</p>
+                    </div>
+                    <div class="deliverable-item">
+                        <h4>📝 Documentation & Insights</h4>
+                        <p>Comprehensive documentation of our methodology, findings, and key insights from the time series analysis.</p>
+                    </div>
+                    <div class="deliverable-item">
+                        <h4>🎤 Final Presentation</h4>
+                        <p>Complete project report with Jupyter notebooks and presentation showcasing our approach and results.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Stock Market Prediction Team. Time Series Forecasting Project.</p>
+            <p style="margin-top: 0.5rem; color: #b0c4de;">Leveraging Data Science for Financial Insights</p>
+        </div>
+    </footer>
+
+    <script>
+        // Create floating particles
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 30;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Initialize particles when page loads
+        window.addEventListener('load', createParticles);
+
+        // Add scroll-based animations
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const parallax = document.querySelector('.hero');
+            if (parallax) {
+                const speed = scrolled * 0.5;
+                parallax.style.transform = `translateY(${speed}px)`;
+            }
+        });
+    </script>
+</body>
+</html>
