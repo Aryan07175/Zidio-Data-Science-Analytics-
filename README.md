@@ -2,14 +2,7 @@
 our First task is:
 📈 Stock Market Prediction using Time Series Forecasting
 This project is a collaborative effort by a team of seven students focused on time series analysis and forecasting for stock market prediction. Our aim is to leverage statistical models and machine learning techniques to understand stock trends and make future price predictions more interpretable and data-driven.
-👥 Team Members
-Aryan
-Shivam
-Somanadha Sai Addepalli
-Naveen
-Munthaha
-Suhani
-Aditya
+
 
 📌 Objective
 To analyze historical stock market data using time series models like:
